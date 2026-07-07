@@ -181,6 +181,28 @@ function showGroup(data) {
     const container = document.getElementById("questionsContainer");
     container.innerHTML = "";
 
+    const desc = group.questions.description;
+    if (desc) {
+        if (desc.header) {
+            const h = document.createElement("h6");
+            h.className = "text-muted mb-1";
+            h.textContent = desc.header;
+            container.appendChild(h);
+        }
+        if (desc.content) {
+            const p = document.createElement("p");
+            p.className = "text-muted small mb-3";
+            p.textContent = desc.content;
+            container.appendChild(p);
+        }
+        if (desc.note) {
+            const note = document.createElement("div");
+            note.className = "alert alert-info py-2 small mb-3";
+            note.textContent = desc.note;
+            container.appendChild(note);
+        }
+    }
+
     for (const q of questions) {
         const wrapper = document.createElement("div");
         wrapper.className = "mb-3 question-row";
@@ -192,6 +214,17 @@ function showGroup(data) {
         label.textContent = q.questionAbbr ? `${q.questionAbbr} — ${q.questionText}` : q.questionText;
         if (q.answerUnits) label.textContent += ` (${q.answerUnits})`;
         wrapper.appendChild(label);
+
+        if (q.instructions && q.instructions.length > 0) {
+            const list = document.createElement("ol");
+            list.className = "mb-2 small text-muted ps-3";
+            for (const inst of q.instructions) {
+                const li = document.createElement("li");
+                li.textContent = inst;
+                list.appendChild(li);
+            }
+            wrapper.appendChild(list);
+        }
 
         if (q.showWhen) {
             const hint = document.createElement("small");
@@ -271,6 +304,12 @@ function renderInput(q) {
             break;
         }
         case "INTEGER": {
+            if (q.fieldLabel) {
+                const lbl = document.createElement("span");
+                lbl.className = "badge bg-secondary me-1";
+                lbl.textContent = q.fieldLabel;
+                div.appendChild(lbl);
+            }
             const input = document.createElement("input");
             input.type = "number";
             input.className = "form-control";
@@ -279,11 +318,21 @@ function renderInput(q) {
             if (q.integerMax !== undefined) input.max = q.integerMax;
             input.dataset.question = q.questionId;
             input.dataset.field = "answerResponse";
-            input.placeholder = q.integerMin !== undefined ? `${q.integerMin} – ${q.integerMax || "∞"}` : "";
+            if (q.integerMin !== undefined && q.integerMax !== undefined) {
+                input.placeholder = `${q.integerMin} – ${q.integerMax}`;
+            } else if (q.integerMin !== undefined) {
+                input.placeholder = `Min: ${q.integerMin}`;
+            }
             div.appendChild(input);
             break;
         }
         case "DECIMAL": {
+            if (q.fieldLabel) {
+                const lbl = document.createElement("span");
+                lbl.className = "badge bg-secondary me-1";
+                lbl.textContent = q.fieldLabel;
+                div.appendChild(lbl);
+            }
             const input = document.createElement("input");
             input.type = "text";
             input.className = "form-control";
