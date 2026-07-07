@@ -106,6 +106,8 @@
 </div>
 
 <script>
+// ── Utility ──
+
 const PROXY = "http://localhost:3000";
 let state = {};
 
@@ -133,6 +135,8 @@ function renderRaw(data) {
     document.getElementById("rawJson").textContent = JSON.stringify(data, null, 2);
     show("step-raw");
 }
+
+// ── Assessment Flow ──
 
 async function createAssessment() {
     const type = document.querySelector('input[name="assessmentType"]:checked').value;
@@ -168,6 +172,8 @@ function handleAssessmentResponse(data) {
         showGroup(data);
     }
 }
+
+// ── Question Rendering ──
 
 function showGroup(data) {
     const group = data.nextGroup;
@@ -382,6 +388,8 @@ function renderInput(q) {
     return div;
 }
 
+// ── Pain Scale Integration ──
+
 function connectPainScales() {
     const areasWrapper = document.querySelector("[data-pain-areas]");
     if (!areasWrapper) return;
@@ -430,6 +438,8 @@ function connectPainScales() {
     });
 }
 
+// ── Video Player ──
+
 function initVideos() {
     document.querySelectorAll(".vid-wrapper .video-js").forEach(el => {
         if (el.player) return;
@@ -442,6 +452,8 @@ function initVideos() {
         });
     });
 }
+
+// ── Response Collection & Submission ──
 
 function collectResponses() {
     const responses = [];
@@ -541,6 +553,8 @@ async function submitGroup() {
     handleAssessmentResponse(data);
 }
 
+// ── Conditionals (showWhen / skipWhen) ──
+
 function applyConditionals(questions) {
     const allRows = document.querySelectorAll(".question-row");
 
@@ -581,6 +595,8 @@ function applyConditionals(questions) {
 
     updateVisibility();
 }
+
+// ── Score & Reset ──
 
 function showScore(score) {
     hide("step-questions");
