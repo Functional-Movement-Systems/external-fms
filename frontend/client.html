@@ -3,125 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Symmio Partner API — Reference Implementation</title>
+    <title>Symmio Partner API — Gamification Reference</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>S</text></svg>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://unpkg.com/video.js@8.23.9/dist/video-js.css" rel="stylesheet" />
     <script src="https://unpkg.com/video.js@8.23.9/dist/video.min.js"></script>
+    <style>
+        .milestone-tile { border-radius: 12px; padding: 1.25rem; transition: all 0.2s; }
+        .milestone-tile.reached { background: linear-gradient(135deg, #d4edda, #c3e6cb); border: 2px solid #28a745; }
+        .milestone-tile:not(.reached) { background: #fff; border: 2px solid #dee2e6; }
+        .milestone-tile .score-value { font-size: 2rem; font-weight: 700; }
+        .milestone-tile .count-badge { font-size: 0.85rem; font-weight: 600; }
+        .group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; }
+        .group-tile { border-radius: 10px; padding: 0.9rem; text-align: center; cursor: pointer; transition: all 0.15s; border: 2px solid #dee2e6; background: #fff; }
+        .group-tile:hover { border-color: #0969da; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .group-tile.completed { background: #f0fff4; border-color: #28a745; }
+        .group-tile .group-name { font-weight: 600; font-size: 0.82rem; line-height: 1.2; }
+        .group-tile .group-pct { font-size: 1.1rem; font-weight: 700; color: #28a745; }
+        .group-tile .group-none { font-size: 0.9rem; color: #adb5bd; }
+        .group-tile.conditional { background: #fff3cd; border-color: #ffc107; }
+        .group-tile.conditional:before { content: "?"; position: absolute; top: 4px; right: 8px; font-size: 0.7rem; color: #856404; }
+        .modal-question-scroll { max-height: 65vh; overflow-y: auto; }
+        .score-card { border-radius: 10px; padding: 1rem; border: 2px solid #dee2e6; background: #fff; }
+    </style>
 </head>
 <body class="bg-light">
-<div class="container py-4" style="max-width: 800px;">
+<div class="container py-3" style="max-width: 1100px;">
 
     <h1 class="mb-1">Symmio Partner API</h1>
-    <p class="text-muted mb-4">Reference implementation — assessment walkthrough</p>
+    <p class="text-muted mb-3">Gamification reference — submit groups in any order, unlock milestones progressively.</p>
 
     <div id="alerts"></div>
 
-    <!-- ── Step 1: Create Assessment ── -->
+    <!-- ── Create Assessment ── -->
     <div class="card mb-3" id="step-create">
         <div class="card-body">
-            <h5 class="card-title">Step 1: Create Assessment</h5>
-            <div class="row g-3">
-                <div class="col-sm-6">
-                    <label class="form-label">Type</label>
-                    <div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="assessmentType" id="typeRisk" value="risk" checked>
-                            <label class="form-check-label" for="typeRisk">MSK Risk</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="assessmentType" id="typeHealth" value="health">
-                            <label class="form-check-label" for="typeHealth">MSK Health</label>
-                        </div>
-                    </div>
+            <div class="row g-2 align-items-end">
+                <div class="col-auto">
+                    <label class="form-label small mb-0">Age</label>
+                    <input type="number" class="form-control form-control-sm" id="userAge" value="35" min="1" style="width:70px">
                 </div>
-                <div class="col-6 col-sm-3">
-                    <label class="form-label" for="langSelect">Language</label>
-                    <select class="form-select" id="langSelect">
-                        <option value="en">English</option>
-                        <option value="de">German</option>
-                        <option value="es">Spanish</option>
-                        <option value="it">Italian</option>
-                        <option value="ja">Japanese</option>
-                        <option value="ko">Korean</option>
-                        <option value="el">Greek</option>
-                        <option value="bs">Bosnian</option>
+                <div class="col-auto">
+                    <label class="form-label small mb-0">Sex</label>
+                    <select class="form-select form-select-sm" id="userSex" style="width:110px">
+                        <option value="true">Female</option>
+                        <option value="false">Male</option>
                     </select>
                 </div>
-                <div class="col-4 col-sm-2">
-                    <label class="form-label">Age</label>
-                    <input type="number" class="form-control" id="userAge" value="35" min="1">
+                <div class="col-auto">
+                    <label class="form-label small mb-0">Language</label>
+                    <select class="form-select form-select-sm" id="langSelect">
+                        <option value="en">English</option><option value="de">German</option><option value="es">Spanish</option>
+                        <option value="it">Italian</option><option value="ja">Japanese</option><option value="ko">Korean</option>
+                        <option value="el">Greek</option><option value="bs">Bosnian</option>
+                    </select>
                 </div>
-                <div class="col-8 col-sm-4">
-                    <label class="form-label">Biological Sex</label>
-                    <div class="pt-1">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="userSex" id="sexFemale" value="true" checked>
-                            <label class="form-check-label" for="sexFemale">Female</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="userSex" id="sexMale" value="false">
-                            <label class="form-check-label" for="sexMale">Male</label>
-                        </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary btn-sm" onclick="createAssessment()">Create Assessment</button>
+                    <button class="btn btn-outline-secondary btn-sm ms-2" onclick="resetAll()">Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Milestone Tiles ── -->
+    <div class="row g-3 mb-3 d-none" id="milestonesRow">
+        <div class="col-sm-6 col-lg-3" id="tileMovementScore"></div>
+        <div class="col-sm-6 col-lg-3" id="tileLifestyleScore"></div>
+        <div class="col-sm-6 col-lg-3" id="tileMskRisk"></div>
+        <div class="col-sm-6 col-lg-3" id="tileMskHealth"></div>
+    </div>
+
+    <!-- ── Group Tiles ── -->
+    <div class="card mb-3 d-none" id="step-groups">
+        <div class="card-body">
+            <h6 class="text-muted small mb-2">Movement Groups</h6>
+            <div class="group-grid mb-3" id="movementGrid"></div>
+            <h6 class="text-muted small mb-2">Lifestyle Groups</h6>
+            <div class="group-grid mb-2" id="lifestyleGrid"></div>
+            <div class="d-none" id="conditionalSection">
+                <h6 class="text-muted small mb-2">Conditional Groups (pending)</h6>
+                <div class="group-grid" id="conditionalGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Score Display ── -->
+    <div class="card mb-3 d-none" id="step-score">
+        <div class="card-body">
+            <h5 class="card-title mb-3">MSK Score</h5>
+            <div class="row g-3" id="scoreRow">
+                <div class="col-md-3">
+                    <div class="score-card text-center">
+                        <div class="text-muted small">Overall</div>
+                        <div class="fs-4 fw-bold" id="scorePct">&mdash;</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="score-card text-center">
+                        <div class="text-muted small">Risk Factor</div>
+                        <div class="fs-5 fw-bold" id="scoreRisk">&mdash;</div>
+                        <div class="small text-muted" id="scoreRiskPct"></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="score-card text-center">
+                        <div class="text-muted small">Movement</div>
+                        <div class="fs-5 fw-bold" id="scoreMove">&mdash;</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="score-card text-center">
+                        <div class="text-muted small">Lifestyle</div>
+                        <div class="fs-5 fw-bold" id="scoreLife">&mdash;</div>
                     </div>
                 </div>
             </div>
-            <button class="btn btn-primary mt-3" onclick="createAssessment()">Create Assessment</button>
+            <div id="scoreFocusAreas" class="mt-2 small text-muted"></div>
+            <div id="scoreErrors" class="mt-2"></div>
         </div>
     </div>
 
-    <!-- ── Step 2: Progress & Questions ── -->
-    <div class="card mb-3 d-none" id="step-questions">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <div>
-                    <h5 class="card-title mb-1" id="groupTitle">Group: —</h5>
-                    <small class="text-muted" id="progressText">Progress: 0 / 0</small>
-                </div>
-                <span class="badge bg-info fs-6" id="statusBadge">in_progress</span>
-            </div>
-            <hr>
-            <div id="questionsContainer"></div>
-            <button class="btn btn-success mt-3 d-none" id="btnSubmit" onclick="submitGroup()">Submit Group</button>
-        </div>
-    </div>
-
-    <!-- ── Step 3: Score ── -->
-    <div class="card mb-3 d-none" id="step-score">
-        <div class="card-body">
-            <h5 class="card-title">Assessment Complete</h5>
-            <div id="scoreContainer"></div>
-            <button class="btn btn-outline-secondary mt-3" onclick="resetAll()">Start Over</button>
-        </div>
-    </div>
-
-    <!-- ── Debug: Raw JSON ── -->
+    <!-- ── Debug ── -->
     <div class="card mb-3 d-none" id="step-raw">
         <div class="card-body">
-            <h5 class="card-title">Raw Response</h5>
-            <pre class="bg-dark text-light p-3 rounded mb-0" id="rawJson" style="font-size: 0.8rem; overflow-x: auto;"></pre>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="card-title mb-0">Raw API Response</h6>
+                <small class="text-muted" id="rawStatus"></small>
+            </div>
+            <pre class="bg-dark text-light p-3 rounded mb-0" id="rawJson" style="font-size: 0.75rem; overflow-x: auto; max-height: 400px;"></pre>
         </div>
     </div>
-
 </div>
 
+<!-- ── Question Modal ── -->
+<div class="modal fade" id="questionModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Group: &mdash;</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body modal-question-scroll" id="modalBody"></div>
+            <div class="modal-footer">
+                <span class="text-muted small me-auto" id="modalRetestHint"></span>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success btn-sm" id="btnSubmit" onclick="submitGroup()">Submit Group</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// ── Utility ──
-
+// ── State ──
 const PROXY = "http://localhost:3000";
-let state = {};
+let state = { assessmentId: null, language: "en", currentMskScore: {} };
+let modalGroupId = null;
+const questionModal = new bootstrap.Modal(document.getElementById("questionModal"));
 
-function showAlert(message, type) {
-    const container = document.getElementById("alerts");
-    const div = document.createElement("div");
-    div.className = `alert alert-${type} alert-dismissible fade show`;
-    div.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
-    container.appendChild(div);
-    setTimeout(() => div.remove(), 8000);
-}
+const MOVEMENT_GROUPS = [
+    "TOE_TOUCH","SHOULDER_MOBILITY","ROTATION","SQUAT","BALANCE","SHOULDER_CLEARING","SPINE_CLEARING"
+];
+const LIFESTYLE_GROUPS = [
+    "BODY_COMPOSITION","PHYSICAL_ACTIVITY","INJURY_HISTORY",
+    "BEHAVIORAL_HEALTH","SLEEP","NUTRITION","BREATHING"
+];
+const CONDITIONAL_GROUPS = ["BEHAVIORAL_QUESTIONNAIRE","SLEEP_PSQI","NUTRITION_QUESTIONNAIRE"];
+const GROUP_LABELS = {
+    TOE_TOUCH:"Toe Touch",SHOULDER_MOBILITY:"Shoulder Mobility",ROTATION:"Rotation",
+    SQUAT:"Squat",BALANCE:"Balance & Reach",SHOULDER_CLEARING:"Shoulder Clearing",
+    SPINE_CLEARING:"Spine Clearing",BODY_COMPOSITION:"Body Composition",
+    PHYSICAL_ACTIVITY:"Physical Activity",INJURY_HISTORY:"Injury History",
+    BEHAVIORAL_HEALTH:"Behavioral Health",SLEEP:"Sleep",NUTRITION:"Nutrition",
+    BREATHING:"Breathing",BEHAVIORAL_QUESTIONNAIRE:"Behavioral Questionnaire",
+    SLEEP_PSQI:"Sleep PSQI",NUTRITION_QUESTIONNAIRE:"Nutrition Questionnaire",
+};
 
+// ── Utility ──
 function show(id) { document.getElementById(id).classList.remove("d-none"); }
 function hide(id) { document.getElementById(id).classList.add("d-none"); }
+
+function showAlert(message, type) {
+    const div = document.createElement("div");
+    div.className = `alert alert-${type} alert-dismissible fade show py-2 small`;
+    div.innerHTML = `${message}<button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>`;
+    document.getElementById("alerts").appendChild(div);
+    setTimeout(() => div.remove(), 8000);
+}
 
 async function api(method, path, body) {
     const url = `${PROXY}${path}`;
@@ -131,83 +200,220 @@ async function api(method, path, body) {
     return res;
 }
 
-function renderRaw(data) {
-    document.getElementById("rawJson").textContent = JSON.stringify(data, null, 2);
-    show("step-raw");
-}
-
 // ── Assessment Flow ──
-
 async function createAssessment() {
-    const type = document.querySelector('input[name="assessmentType"]:checked').value;
     const age = parseInt(document.getElementById("userAge").value);
-    const isFemale = document.querySelector('input[name="userSex"]:checked').value === "true";
+    const isFemale = document.getElementById("userSex").value === "true";
     const language = document.getElementById("langSelect").value;
-
-    if (!age || age < 1) { showAlert("Please enter a valid age.", "warning"); return; }
+    if (!age || age < 1) { showAlert("Enter a valid age.", "warning"); return; }
 
     state.language = language;
-    const res = await api("POST", "/create-assessment", { type, userInfo: { age, isFemale }, language });
+    const res = await api("POST", "/create-assessment", { userInfo: { age, isFemale }, language });
     const data = await res.json();
+    if (!res.ok) { showAlert(data.message || "Failed to create.", "danger"); return; }
 
-    if (!res.ok) { showAlert(data.message || "Failed to create assessment.", "danger"); return; }
-
-    state = { assessmentId: data.assessmentId, answers: {} };
-    renderRaw(data);
-    handleAssessmentResponse(data);
+    state.assessmentId = data.assessmentId;
+    hydrateState(data);
+    renderAll();
+    show("step-groups");
+    show("step-raw");
+    hide("step-create");
 }
 
-function handleAssessmentResponse(data) {
-    state.completedGroups = data.completedGroups || [];
-    state.requiredGroups = data.requiredGroups || [];
-    state.nextGroupId = data.nextGroup?.groupId;
+function hydrateState(data) {
     state.status = data.status;
+    state.currentMskScore = data.currentMskScore || {};
+    state.movementScoreMilestone = data.movementScoreMilestone || {};
+    state.lifestyleScoreMilestone = data.lifestyleScoreMilestone || {};
+    state.mskRiskMilestone = data.mskRiskMilestone || {};
+    state.mskHealthMilestone = data.mskHealthMilestone || {};
+}
 
-    if (data.status === "complete") {
-        showScore(data.currentMskScore);
-        return;
-    }
+function renderAll() {
+    renderMilestones();
+    renderGroupTiles();
+    renderScore();
+    renderRaw();
+}
 
-    if (data.status === "in_progress" || data.status === "retest_in_progress") {
-        showGroup(data);
+// ── Milestone Tiles ──
+function renderMilestones() {
+    show("milestonesRow");
+    const milestones = [
+        { id: "tileMovementScore", m: state.movementScoreMilestone, label: "Movement Score", icon: "🏃" },
+        { id: "tileLifestyleScore", m: state.lifestyleScoreMilestone, label: "Lifestyle Score", icon: "💚" },
+        { id: "tileMskRisk", m: state.mskRiskMilestone, label: "MSK Risk", icon: "⚡" },
+        { id: "tileMskHealth", m: state.mskHealthMilestone, label: "MSK Health", icon: "🌟" },
+    ];
+    for (const { id, m, label, icon } of milestones) {
+        const reached = m && m.reached;
+        const pct = state.currentMskScore;
+        let scoreDisplay = "";
+        if (reached) {
+            if (id === "tileMovementScore") {
+                scoreDisplay = pct?.movementScore?.percentage != null ? `${pct.movementScore.percentage}%` : "✓";
+            } else if (id === "tileLifestyleScore") {
+                scoreDisplay = pct?.lifestyleScore?.percentage != null ? `${pct.lifestyleScore.percentage}%` : "✓";
+            } else if (id === "tileMskRisk" || id === "tileMskHealth") {
+                scoreDisplay = pct?.percentage != null ? `${pct.percentage}%` : "✓";
+            }
+        }
+        const outstanding = (m && m.outstandingGroups) ? m.outstandingGroups.map(g => GROUP_LABELS[g] || g).join(", ") : "";
+        document.getElementById(id).innerHTML = `
+            <div class="milestone-tile h-100 ${reached ? 'reached' : ''}">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <span class="fw-bold small">${icon} ${label}</span>
+                    ${reached ? `<span class="badge bg-success">Reached</span>` : `<span class="badge bg-secondary">Pending</span>`}
+                </div>
+                ${reached ? `<div class="score-value">${scoreDisplay}</div>` : ""}
+                <div class="count-badge">${outstanding ? `Missing: ${outstanding}` : "All done"}</div>
+            </div>`;
     }
 }
 
-// ── Question Rendering ──
+// ── Group Tile Grid ──
+function renderGroupTiles() {
+    const score = state.currentMskScore || {};
+    const ms = score.movementScore || {};
+    const ls = score.lifestyleScore || {};
+    const movementPercent = ms.percentage;
 
-function showGroup(data) {
-    const group = data.nextGroup;
-    const questions = group.questions.questions || [];
-
-    document.getElementById("groupTitle").textContent = `Group: ${group.groupName} (${group.groupId})`;
-    document.getElementById("progressText").textContent =
-        `Progress: ${data.completedGroups.length} / ${data.requiredGroups.length}`;
-    document.getElementById("statusBadge").textContent = data.status;
-
-    const container = document.getElementById("questionsContainer");
-    container.innerHTML = "";
-
-    const desc = group.questions.description;
-    if (desc) {
-        if (desc.header) {
-            const h = document.createElement("h6");
-            h.className = "text-muted mb-1";
-            h.textContent = desc.header;
-            container.appendChild(h);
+    function buildTile(groupId) {
+        let pct = null;
+        let done = false;
+        if (MOVEMENT_GROUPS.includes(groupId)) {
+            const key = { TOE_TOUCH:"toeTouchScore",SHOULDER_MOBILITY:"shoulderMobilityScore",ROTATION:"rotationScore",SQUAT:"squatScore",BALANCE:"balanceScore" }[groupId];
+            if (key && ms[key]) { pct = ms[key].percentage; done = pct != null; }
+            if (groupId === "SHOULDER_CLEARING") { done = ms.hasShoulderClearingPain != null; }
+            if (groupId === "SPINE_CLEARING") { done = ms.hasSpineClearingPain != null; }
+        } else {
+            const key = { BODY_COMPOSITION:"bodyCompositionScore",PHYSICAL_ACTIVITY:"physicalActivityScore",INJURY_HISTORY:"injuryHistoryScore",BEHAVIORAL_HEALTH:"behavioralScore",SLEEP:"sleepScore",NUTRITION:"nutritionScore",BREATHING:"breathingScore",BEHAVIORAL_QUESTIONNAIRE:"behavioralScore",SLEEP_PSQI:"sleepScore",NUTRITION_QUESTIONNAIRE:"nutritionScore" }[groupId];
+            if (key && ls[key]) { pct = ls[key].percentage; done = pct != null; }
         }
-        if (desc.content) {
-            const p = document.createElement("p");
-            p.className = "text-muted small mb-3";
-            p.textContent = desc.content;
-            container.appendChild(p);
+        const clearingGroup = groupId === "SHOULDER_CLEARING" || groupId === "SPINE_CLEARING";
+        let cls = "";
+        let statusHtml = "";
+        if (clearingGroup) {
+            const painField = groupId === "SHOULDER_CLEARING" ? ms.hasShoulderClearingPain : ms.hasSpineClearingPain;
+            done = painField != null;
+            cls = done ? "completed" : "";
+            if (done) {
+                statusHtml = painField
+                    ? `<div class="group-pct" style="color:#dc3545">Fail</div>`
+                    : `<div class="group-pct" style="color:#28a745">Pass</div>`;
+            } else {
+                statusHtml = `<div class="group-none">&mdash;</div>`;
+            }
+        } else {
+            cls = done ? "completed" : "";
+            statusHtml = done ? `<div class="group-pct">${pct}%</div>` : `<div class="group-none">&mdash;</div>`;
         }
-        if (desc.note) {
-            const note = document.createElement("div");
-            note.className = "alert alert-info py-2 small mb-3";
-            note.textContent = desc.note;
-            container.appendChild(note);
-        }
+        return `<div class="group-tile position-relative ${cls}" onclick="openGroup('${groupId}')">
+            <div class="group-name">${GROUP_LABELS[groupId] || groupId}</div>
+            ${statusHtml}
+        </div>`;
     }
+
+    document.getElementById("movementGrid").innerHTML = MOVEMENT_GROUPS.map(buildTile).join("");
+    document.getElementById("lifestyleGrid").innerHTML = LIFESTYLE_GROUPS.map(buildTile).join("");
+
+    const pending = collectPending();
+    if (pending.length > 0) {
+        document.getElementById("conditionalGrid").innerHTML = pending.map(buildTile).join("");
+        show("conditionalSection");
+    } else {
+        hide("conditionalSection");
+        document.getElementById("conditionalGrid").innerHTML = "";
+    }
+}
+
+function collectPending() {
+    const allOutstanding = [
+        ...(state.movementScoreMilestone?.outstandingGroups || []),
+        ...(state.lifestyleScoreMilestone?.outstandingGroups || []),
+        ...(state.mskRiskMilestone?.outstandingGroups || []),
+        ...(state.mskHealthMilestone?.outstandingGroups || []),
+    ];
+    return CONDITIONAL_GROUPS.filter(g => allOutstanding.includes(g));
+}
+
+// ── Score Display ──
+function renderScore() {
+    const s = state.currentMskScore || {};
+    const hasData = s.movementScore || s.lifestyleScore || s.percentage != null;
+    if (!hasData) { hide("step-score"); return; }
+    show("step-score");
+
+    document.getElementById("scorePct").textContent = s.percentage != null ? `${s.percentage}%` : "\u2014";
+    document.getElementById("scoreRisk").textContent = s.riskFactor?.riskCode || "\u2014";
+    document.getElementById("scoreRiskPct").textContent = s.riskFactor?.percentage != null ? `${s.riskFactor.percentage}%` : "";
+    document.getElementById("scoreMove").textContent = s.movementScore?.percentage != null ? `${s.movementScore.percentage}%` : "\u2014";
+    document.getElementById("scoreLife").textContent = s.lifestyleScore?.percentage != null ? `${s.lifestyleScore.percentage}%` : "\u2014";
+
+    const fas = s.focusAreas;
+    document.getElementById("scoreFocusAreas").innerHTML = (fas && fas.length)
+        ? `Focus Areas: ${fas.map(f => f.groupName || f.groupId).join(", ")}`
+        : "";
+
+    const errs = s.errors;
+    document.getElementById("scoreErrors").innerHTML = (errs && errs.length)
+        ? `<div class="alert alert-warning py-1 small mb-0">${errs.map(e => `&bull; ${e}`).join("<br>")}</div>`
+        : "";
+}
+
+// ── Raw Debug ──
+let lastRaw = null;
+function renderRaw() {
+    if (!lastRaw) return;
+    document.getElementById("rawJson").textContent = JSON.stringify(lastRaw, null, 2);
+    document.getElementById("rawStatus").textContent = `Status: ${lastRaw.status || "?"}`;
+}
+
+// ── Question Modal ──
+async function openGroup(groupId) {
+    modalGroupId = groupId;
+    document.getElementById("modalTitle").textContent = `Group: ${GROUP_LABELS[groupId] || groupId} (${groupId})`;
+    document.getElementById("modalBody").innerHTML = `<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>`;
+    document.getElementById("btnSubmit").classList.add("d-none");
+    document.getElementById("modalRetestHint").textContent = "";
+
+    // detect retest
+    api("GET", `/state?assessmentId=${encodeURIComponent(state.assessmentId)}&language=${state.language}`)
+        .then(r => r.json())
+        .then(data => {
+            const score = data.currentMskScore || {};
+            const ms = score.movementScore || {};
+            const ls = score.lifestyleScore || {};
+            let done = false;
+            if (MOVEMENT_GROUPS.includes(groupId)) {
+                const key = { TOE_TOUCH:"toeTouchScore",SHOULDER_MOBILITY:"shoulderMobilityScore",ROTATION:"rotationScore",SQUAT:"squatScore",BALANCE:"balanceScore" }[groupId];
+                if (key && ms[key]) done = ms[key].percentage != null;
+                if (groupId === "SHOULDER_CLEARING") done = ms.hasShoulderClearingPain != null;
+                if (groupId === "SPINE_CLEARING") done = ms.hasSpineClearingPain != null;
+            } else {
+                const key = { BODY_COMPOSITION:"bodyCompositionScore",PHYSICAL_ACTIVITY:"physicalActivityScore",INJURY_HISTORY:"injuryHistoryScore",BEHAVIORAL_HEALTH:"behavioralScore",SLEEP:"sleepScore",NUTRITION:"nutritionScore",BREATHING:"breathingScore",BEHAVIORAL_QUESTIONNAIRE:"behavioralScore",SLEEP_PSQI:"sleepScore",NUTRITION_QUESTIONNAIRE:"nutritionScore" }[groupId];
+                if (key && ls[key]) done = ls[key].percentage != null;
+            }
+            if (done) document.getElementById("modalRetestHint").textContent = "Retesting — new answers will replace previous score.";
+
+            return api("GET", `/questions?groupId=${encodeURIComponent(groupId)}&language=${state.language}`);
+        })
+        .then(r => r.json())
+        .then(questions => {
+            if (questions.message) { showAlert(questions.message, "danger"); questionModal.hide(); return; }
+            renderQuestions(questions);
+            document.getElementById("btnSubmit").classList.remove("d-none");
+        })
+        .catch(err => { showAlert("Failed to load questions: " + err.message, "danger"); questionModal.hide(); });
+
+    questionModal.show();
+}
+
+// ── Question Rendering (reused from original client.html) ──
+function renderQuestions(group) {
+    const questions = group.questions || [];
+    const container = document.getElementById("modalBody");
+    container.innerHTML = "";
 
     for (const q of questions) {
         const wrapper = document.createElement("div");
@@ -216,54 +422,38 @@ function showGroup(data) {
         if (q.showWhen || q.skipWhen) wrapper.classList.add("conditional-question");
 
         const label = document.createElement("label");
-        label.className = "form-label";
-        label.textContent = q.questionAbbr ? `${q.questionAbbr} — ${q.questionText}` : q.questionText;
+        label.className = "form-label small";
+        label.textContent = q.questionAbbr ? `${q.questionAbbr} \u2014 ${q.questionText}` : q.questionText;
         if (q.answerUnits) label.textContent += ` (${q.answerUnits})`;
         wrapper.appendChild(label);
 
         if (q.instructions && q.instructions.length > 0) {
             const list = document.createElement("ol");
             list.className = "mb-2 small text-muted ps-3";
-            for (const inst of q.instructions) {
-                const li = document.createElement("li");
-                li.textContent = inst;
-                list.appendChild(li);
-            }
+            for (const inst of q.instructions) { const li = document.createElement("li"); li.textContent = inst; list.appendChild(li); }
             wrapper.appendChild(list);
         }
 
         if (q.showWhen) {
             const hint = document.createElement("small");
-            hint.className = "text-muted d-block mb-1";
-            const conditions = q.showWhen.map(c => `${c.matchQuestionId} = ${c.matchQuestionAnswerId}`).join(" OR ");
-            hint.textContent = `Shown when: ${conditions}`;
+            hint.className = "text-muted d-block";
+            hint.textContent = "Shown when: " + q.showWhen.map(c => `${c.matchQuestionId}=${c.matchQuestionAnswerId}`).join(" OR ");
             wrapper.appendChild(hint);
         }
-
         if (q.skipWhen) {
             const hint = document.createElement("small");
-            hint.className = "text-muted d-block mb-1";
-            const conditions = q.skipWhen.map(c => `${c.matchQuestionId} = ${c.matchQuestionAnswerId}`).join(" OR ");
-            hint.textContent = `Skipped when: ${conditions}`;
+            hint.className = "text-muted d-block";
+            hint.textContent = "Skipped when: " + q.skipWhen.map(c => `${c.matchQuestionId}=${c.matchQuestionAnswerId}`).join(" OR ");
             wrapper.appendChild(hint);
         }
 
-        const input = renderInput(q);
-        wrapper.appendChild(input);
+        wrapper.appendChild(renderInput(q));
 
         if (q.videoId) {
-            const videoWrapper = document.createElement("div");
-            videoWrapper.className = "mt-2 vid-wrapper";
-            videoWrapper.dataset.videoId = q.videoId;
-            const vid = document.createElement("video");
-            vid.className = "video-js vjs-default-skin w-100 rounded";
-            vid.style.maxWidth = "400px";
-            const source = document.createElement("source");
-            source.src = `https://cdn.jwplayer.com/manifests/${q.videoId}.m3u8`;
-            source.type = "application/x-mpegURL";
-            vid.appendChild(source);
-            videoWrapper.appendChild(vid);
-            wrapper.appendChild(videoWrapper);
+            const vw = document.createElement("div"); vw.className = "mt-2 vid-wrapper"; vw.dataset.videoId = q.videoId;
+            const vid = document.createElement("video"); vid.className = "video-js vjs-default-skin w-100 rounded"; vid.style.maxWidth = "400px";
+            const src = document.createElement("source"); src.src = `https://cdn.jwplayer.com/manifests/${q.videoId}.m3u8`; src.type = "application/x-mpegURL";
+            vid.appendChild(src); vw.appendChild(vid); wrapper.appendChild(vw);
         }
 
         container.appendChild(wrapper);
@@ -272,159 +462,71 @@ function showGroup(data) {
     initVideos();
     connectPainScales();
     applyConditionals(questions);
-    document.getElementById("btnSubmit").classList.remove("d-none");
-    hide("step-create");
-    show("step-questions");
-    show("step-score");
-    hide("step-score");
 }
 
 function renderInput(q) {
     const div = document.createElement("div");
-
     switch (q.answerFormat) {
-        case "OPTIONS": {
+        case "OPTIONS":
             for (const opt of q.answerOptions || []) {
-                const inner = document.createElement("div");
-                inner.className = "form-check";
-                inner.innerHTML = `
-                    <input class="form-check-input" type="radio"
-                        name="q_${q.questionId}" value="${opt.answerId}"
-                        data-question="${q.questionId}" data-field="answerId">
-                    <label class="form-check-label">${opt.answerText}</label>`;
-                div.appendChild(inner);
+                div.innerHTML += `<div class="form-check"><input class="form-check-input" type="radio" name="q_${q.questionId}" value="${opt.answerId}" data-question="${q.questionId}" data-field="answerId"><label class="form-check-label small">${opt.answerText}</label></div>`;
             }
             break;
-        }
-        case "MULTIPLE_CHOICE": {
+        case "MULTIPLE_CHOICE":
             for (const opt of q.answerOptions || []) {
-                const inner = document.createElement("div");
-                inner.className = "form-check";
-                inner.innerHTML = `
-                    <input class="form-check-input" type="checkbox"
-                        value="${opt.answerId}"
-                        data-question="${q.questionId}" data-field="answerResponse" data-multi="true">
-                    <label class="form-check-label">${opt.answerText}</label>`;
-                div.appendChild(inner);
+                div.innerHTML += `<div class="form-check"><input class="form-check-input" type="checkbox" value="${opt.answerId}" data-question="${q.questionId}" data-field="answerResponse" data-multi="true"><label class="form-check-label small">${opt.answerText}</label></div>`;
             }
             break;
-        }
         case "INTEGER": {
-            if (q.fieldLabel) {
-                const lbl = document.createElement("span");
-                lbl.className = "badge bg-secondary me-1";
-                lbl.textContent = q.fieldLabel;
-                div.appendChild(lbl);
-            }
-            const input = document.createElement("input");
-            input.type = "number";
-            input.className = "form-control";
-            input.style.maxWidth = "200px";
-            if (q.integerMin !== undefined) input.min = q.integerMin;
-            if (q.integerMax !== undefined) input.max = q.integerMax;
-            input.dataset.question = q.questionId;
-            input.dataset.field = "answerResponse";
-            if (q.integerMin !== undefined && q.integerMax !== undefined) {
-                input.placeholder = `${q.integerMin} – ${q.integerMax}`;
-            } else if (q.integerMin !== undefined) {
-                input.placeholder = `Min: ${q.integerMin}`;
-            }
-            div.appendChild(input);
+            if (q.fieldLabel) div.innerHTML += `<span class="badge bg-secondary me-1">${q.fieldLabel}</span>`;
+            div.innerHTML += `<input type="number" class="form-control form-control-sm" style="max-width:200px" data-question="${q.questionId}" data-field="answerResponse" ${q.integerMin!==undefined?`min="${q.integerMin}"`:""} ${q.integerMax!==undefined?`max="${q.integerMax}"`:""}>`;
             break;
         }
-        case "DECIMAL": {
-            if (q.fieldLabel) {
-                const lbl = document.createElement("span");
-                lbl.className = "badge bg-secondary me-1";
-                lbl.textContent = q.fieldLabel;
-                div.appendChild(lbl);
-            }
-            const input = document.createElement("input");
-            input.type = "text";
-            input.className = "form-control";
-            input.style.maxWidth = "200px";
-            input.inputMode = "decimal";
-            input.dataset.question = q.questionId;
-            input.dataset.field = "answerResponse";
-            div.appendChild(input);
-            break;
-        }
+        case "DECIMAL":
         case "TIME": {
-            const input = document.createElement("input");
-            input.type = "time";
-            input.className = "form-control";
-            input.style.maxWidth = "200px";
-            input.dataset.question = q.questionId;
-            input.dataset.field = "answerResponse";
-            div.appendChild(input);
+            if (q.fieldLabel) div.innerHTML += `<span class="badge bg-secondary me-1">${q.fieldLabel}</span>`;
+            const t = q.answerFormat === "TIME" ? "time" : "text";
+            const inputMode = q.answerFormat === "DECIMAL" ? 'inputmode="decimal"' : "";
+            div.innerHTML += `<input type="${t}" class="form-control form-control-sm" style="max-width:200px" ${inputMode} data-question="${q.questionId}" data-field="answerResponse">`;
             break;
         }
-        case "MULTIPLE_CHOICE_PAIN_AREAS": {
+        case "MULTIPLE_CHOICE_PAIN_AREAS":
             div.dataset.painAreas = "true";
             for (const opt of q.answerOptions || []) {
-                const inner = document.createElement("div");
-                inner.className = "form-check";
-                inner.innerHTML = `
-                    <input class="form-check-input pain-area-cb" type="checkbox"
-                        value="${opt.answerId}" data-area="${opt.answerId}">
-                    <label class="form-check-label">${opt.answerText}</label>`;
-                div.appendChild(inner);
+                div.innerHTML += `<div class="form-check"><input class="form-check-input pain-area-cb" type="checkbox" value="${opt.answerId}" data-area="${opt.answerId}"><label class="form-check-label small">${opt.answerText}</label></div>`;
             }
             break;
-        }
-        case "MULTIPLE_PAIN_SCALE": {
-            div.dataset.painScale = "true";
-            div.dataset.question = q.questionId;
-            const msg = document.createElement("p");
-            msg.className = "text-muted mb-0";
-            msg.textContent = "Select pain areas above to rate each one.";
-            div.appendChild(msg);
+        case "MULTIPLE_PAIN_SCALE":
+            div.dataset.painScale = "true"; div.dataset.question = q.questionId;
+            div.innerHTML += `<p class="text-muted mb-0 small">Select pain areas above to rate each one.</p>`;
             break;
-        }
-        default: {
-            div.textContent = `Unknown format: ${q.answerFormat}`;
-        }
+        default: div.textContent = `Unknown: ${q.answerFormat}`;
     }
     return div;
 }
 
-// ── Pain Scale Integration ──
-
 function connectPainScales() {
     const areasWrapper = document.querySelector("[data-pain-areas]");
     if (!areasWrapper) return;
-
     document.querySelectorAll("[data-pain-scale]").forEach(scaleDiv => {
-
         const areaOptions = areasWrapper.querySelectorAll(".pain-area-cb");
-
         function rebuildScale() {
             const checked = areasWrapper.querySelectorAll(".pain-area-cb:checked");
             const msg = scaleDiv.querySelector("p.text-muted");
-
             scaleDiv.querySelectorAll(".pain-slider-row").forEach(el => el.remove());
-
-            if (checked.length === 0) {
-                if (msg) msg.classList.remove("d-none");
-                return;
-            }
+            if (checked.length === 0) { if (msg) msg.classList.remove("d-none"); return; }
             if (msg) msg.classList.add("d-none");
-
             checked.forEach(cb => {
-                const area = cb.value;
                 const row = document.createElement("div");
                 row.className = "pain-slider-row mb-2 d-flex align-items-center gap-2";
-                row.innerHTML = `
-                    <label class="form-label mb-0" style="min-width:130px">${area}</label>
-                    <input type="range" class="form-range pain-scale-val" min="0" max="100" value="50"
-                        style="max-width:120px" data-area="${area}">
-                    <span class="pain-scale-display badge bg-secondary" style="min-width:32px">50</span>
-                    <input type="hidden" class="pain-scale-hidden" data-area="${area}" value="50">`;
+                row.innerHTML = `<label class="form-label small mb-0" style="min-width:100px">${cb.value}</label>
+                    <input type="range" class="form-range pain-scale-val" min="0" max="100" value="50" style="max-width:100px" data-area="${cb.value}">
+                    <span class="pain-scale-display badge bg-secondary" style="min-width:28px">50</span>
+                    <input type="hidden" class="pain-scale-hidden" data-area="${cb.value}" value="50">`;
                 scaleDiv.appendChild(row);
             });
-
             scaleDiv.querySelectorAll(".pain-scale-val").forEach(slider => {
-                slider.addEventListener("input", function () {
+                slider.addEventListener("input", function() {
                     const display = this.parentElement.querySelector(".pain-scale-display");
                     const hidden = this.parentElement.querySelector(".pain-scale-hidden");
                     if (display) display.textContent = this.value;
@@ -432,88 +534,84 @@ function connectPainScales() {
                 });
             });
         }
-
         areaOptions.forEach(cb => cb.addEventListener("change", rebuildScale));
         rebuildScale();
     });
 }
 
-// ── Video Player ──
-
 function initVideos() {
     document.querySelectorAll(".vid-wrapper .video-js").forEach(el => {
         if (el.player) return;
-        const id = "vjs-" + Math.random().toString(36).slice(2, 9);
-        el.id = id;
-        el.player = videojs(el, {
-            controls: true,
-            preload: "metadata",
-            html5: { nativeAudioTracks: false, nativeVideoTracks: false },
-        });
+        el.id = "vjs-" + Math.random().toString(36).slice(2,9);
+        el.player = videojs(el, { controls: true, preload: "metadata", html5: { nativeAudioTracks: false, nativeVideoTracks: false } });
     });
 }
 
-// ── Response Collection & Submission ──
+function applyConditionals(questions) {
+    const allRows = document.querySelectorAll(".question-row");
+    function updateVisibility() {
+        for (const row of allRows) {
+            if (!row.classList.contains("conditional-question")) continue;
+            const qid = row.dataset.questionId;
+            const q = questions.find(x => x.questionId === qid);
+            if (!q) continue;
+            let visible = true;
+            if (q.showWhen && q.showWhen.length > 0) {
+                visible = q.showWhen.some(cond => {
+                    const input = document.querySelector(`input[name="q_${cond.matchQuestionId}"]:checked`);
+                    return input && input.value === cond.matchQuestionAnswerId;
+                });
+            }
+            if (visible && q.skipWhen && q.skipWhen.length > 0) {
+                visible = !q.skipWhen.some(cond => {
+                    const input = document.querySelector(`input[name="q_${cond.matchQuestionId}"]:checked`);
+                    return input && input.value === cond.matchQuestionAnswerId;
+                });
+            }
+            row.classList.toggle("d-none", !visible);
+        }
+    }
+    document.querySelectorAll(".question-row input[type=radio]").forEach(el => el.addEventListener("change", updateVisibility));
+    updateVisibility();
+}
 
+// ── Submit ──
 function collectResponses() {
     const responses = [];
     const rows = document.querySelectorAll(".question-row:not(.d-none)");
-
     for (const row of rows) {
         const qid = row.dataset.questionId;
-
         const radio = row.querySelector('input[type="radio"]:checked');
-        if (radio) {
-            responses.push({ questionId: qid, answerId: radio.value });
-            continue;
-        }
+        if (radio) { responses.push({ questionId: qid, answerId: radio.value }); continue; }
 
         const painAreas = row.querySelectorAll('.pain-area-cb:checked');
         if (painAreas.length > 0) {
-            const entries = Array.from(painAreas).map(cb => ( { [cb.value]: "FRONT" } ));
-            responses.push({ questionId: qid, answerResponse: JSON.stringify(entries) });
-            continue;
+            const entries = Array.from(painAreas).map(cb => ({ [cb.value]: "FRONT" }));
+            responses.push({ questionId: qid, answerResponse: JSON.stringify(entries) }); continue;
         }
 
         const checkboxes = row.querySelectorAll('input[type="checkbox"]:checked');
         if (checkboxes.length > 0) {
-            const values = Array.from(checkboxes).map(cb => cb.value).join(",");
-            responses.push({ questionId: qid, answerResponse: values });
-            continue;
+            responses.push({ questionId: qid, answerResponse: Array.from(checkboxes).map(cb => cb.value).join(",") }); continue;
         }
 
         const painScale = row.querySelector("[data-pain-scale]");
         if (painScale) {
             const entries = [];
-            const sliders = painScale.querySelectorAll(".pain-scale-hidden");
-            sliders.forEach(h => {
-                const area = h.dataset.area;
-                const value = parseInt(h.value);
-                if (value > 0) {
-                    entries.push({ area, value, direction: "FRONT" });
-                }
+            painScale.querySelectorAll(".pain-scale-hidden").forEach(h => {
+                const v = parseInt(h.value);
+                if (v > 0) entries.push({ area: h.dataset.area, value: v, direction: "FRONT" });
             });
-            if (entries.length === 0) {
-                showAlert(`Set at least one pain scale value for ${qid}.`, "warning");
-                return null;
-            }
-            responses.push({ questionId: qid, answerResponse: JSON.stringify(entries) });
+            if (entries.length > 0) responses.push({ questionId: qid, answerResponse: JSON.stringify(entries) });
             continue;
         }
 
         const input = row.querySelector("input, textarea");
-        if (input && input.value) {
-            responses.push({ questionId: qid, answerResponse: input.value });
-            continue;
-        }
+        if (input && input.value) { responses.push({ questionId: qid, answerResponse: input.value }); continue; }
 
         const isOptional = row.querySelector(".is-optional");
-        if (!isOptional) {
-            showAlert(`Missing answer for ${qid}.`, "warning");
-            return null;
-        }
+        if (!isOptional) { showAlert(`Missing answer for ${qid}.`, "warning"); return null; }
     }
-
     return responses;
 }
 
@@ -521,27 +619,9 @@ async function submitGroup() {
     const responses = collectResponses();
     if (!responses) return;
 
-    const groupId = state.nextGroupId;
-    const body = {
-        assessmentId: state.assessmentId,
-        groupId,
-        questionResponses: responses,
-        language: state.language,
-    };
-    console.log("[SUBMIT] Sending:", JSON.stringify(body, null, 2));
-
+    const body = { assessmentId: state.assessmentId, groupId: modalGroupId, questionResponses: responses, language: state.language };
     const res = await api("POST", "/submit-group", body);
-    let data;
-    try {
-        data = await res.json();
-    } catch {
-        const text = await res.text();
-        console.error("[SUBMIT] Non-JSON response:", text);
-        showAlert(`Server returned ${res.status}: ${text.slice(0, 200)}`, "danger");
-        return;
-    }
-
-    console.log("[SUBMIT] Response:", res.status, JSON.stringify(data));
+    const data = await res.json();
 
     if (!res.ok) {
         const msg = data.message || (data.errors ? data.errors.join(", ") : null) || "Submission failed.";
@@ -549,98 +629,26 @@ async function submitGroup() {
         return;
     }
 
-    renderRaw(data);
-    handleAssessmentResponse(data);
+    hydrateState(data);
+    renderAll();
+    questionModal.hide();
+
+    lastRaw = { ...data, status: res.status };
+    renderRaw();
 }
 
-// ── Conditionals (showWhen / skipWhen) ──
-
-function applyConditionals(questions) {
-    const allRows = document.querySelectorAll(".question-row");
-
-    function updateVisibility() {
-        for (const row of allRows) {
-            if (!row.classList.contains("conditional-question")) continue;
-            const qid = row.dataset.questionId;
-            const q = questions.find(x => x.questionId === qid);
-            if (!q) continue;
-
-            let visible = true;
-
-            if (q.showWhen && q.showWhen.length > 0) {
-                visible = q.showWhen.some(cond => {
-                    const input = document.querySelector(
-                        `input[name="q_${cond.matchQuestionId}"]:checked`
-                    );
-                    return input && input.value === cond.matchQuestionAnswerId;
-                });
-            }
-
-            if (visible && q.skipWhen && q.skipWhen.length > 0) {
-                visible = !q.skipWhen.some(cond => {
-                    const input = document.querySelector(
-                        `input[name="q_${cond.matchQuestionId}"]:checked`
-                    );
-                    return input && input.value === cond.matchQuestionAnswerId;
-                });
-            }
-
-            row.classList.toggle("d-none", !visible);
-        }
-    }
-
-    document.querySelectorAll(".question-row input[type=radio]").forEach(el => {
-        el.addEventListener("change", updateVisibility);
-    });
-
-    updateVisibility();
-}
-
-// ── Score & Reset ──
-
-function showScore(score) {
-    hide("step-questions");
-    document.getElementById("btnSubmit").classList.add("d-none");
-    show("step-score");
-
-    const container = document.getElementById("scoreContainer");
-    container.innerHTML = `
-        <div class="row g-3 mb-3">
-            <div class="col-md-4">
-                <div class="border rounded p-3 text-center">
-                    <div class="text-muted small">Overall Score</div>
-                    <div class="display-6 fw-bold">${score.percentage ?? "—"}</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="border rounded p-3 text-center">
-                    <div class="text-muted small">Risk Factor</div>
-                    <div class="display-6 fw-bold">${score.riskFactor?.riskCode ?? "—"}</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="border rounded p-3 text-center">
-                    <div class="text-muted small">Movement Score</div>
-                    <div class="display-6 fw-bold">${score.movementScore?.percentage ?? "—"}</div>
-                </div>
-            </div>
-        </div>
-        ${score.errors?.length ? `
-        <div class="alert alert-warning">
-            <strong>Score errors:</strong>
-            <ul class="mb-0 mt-1">${score.errors.map(e => `<li>${e}</li>`).join("")}</ul>
-        </div>` : ""}`;
-}
-
+// ── Reset ──
 function resetAll() {
-    state = {};
-    hide("step-questions");
+    state = { assessmentId: null, language: "en", currentMskScore: {} };
+    modalGroupId = null;
+    hide("milestonesRow");
+    hide("step-groups");
     hide("step-score");
     hide("step-raw");
     show("step-create");
-    document.getElementById("btnSubmit").classList.add("d-none");
-    document.getElementById("questionsContainer").innerHTML = "";
     document.getElementById("alerts").innerHTML = "";
+    document.getElementById("rawJson").textContent = "";
+    lastRaw = null;
 }
 </script>
 </body>

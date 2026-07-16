@@ -17,8 +17,9 @@ The server starts on `http://localhost:3000` by default.
 
 | Method | Path | Description |
 |---|---|---|
-| POST | `/create-assessment` | Creates a new assessment. Body: `{ type: "risk"|"health", userInfo: { age, isFemale } }` |
-| POST | `/submit-group` | Submits a group. Body: `{ assessmentId, groupId, questionResponses }` |
-| GET | `/state?assessmentId=...` | Gets the current assessment state. |
+| POST | `/create-assessment` | Creates a new gamification assessment. Body: `{ userInfo: { age, isFemale }, language? }` |
+| POST | `/submit-group` | Submits group responses (or retests). Body: `{ assessmentId, groupId, questionResponses, language? }` |
+| GET | `/state` | Gets current assessment state. Query: `?assessmentId=X&language=Y` |
+| GET | `/questions` | Fetches question definitions for a group. Query: `?groupId=X&language=Y` |
 
-All three endpoints forward to the Symmio Partner API using the configured `API_KEY`.
+All endpoints forward to the Symmio Partner API using the configured `API_KEY`.

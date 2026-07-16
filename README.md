@@ -7,7 +7,7 @@ Reference implementations and examples for the Symmio Partner API — a public r
 ```
 external-fms/
 ├── backend/           # Express proxy server (Node.js)
-├── frontend/          # Bootstrap-based assessment walkthrough (vanilla HTML/JS)
+├── frontend/          # Gamification assessment app (vanilla HTML/JS + Bootstrap)
 └── ...
 ```
 
@@ -15,10 +15,10 @@ Each directory is self-contained with its own documentation.
 
 ## Reference Implementation
 
-The `backend/` + `frontend/` combo demonstrates the full integration pattern:
+The `backend/` + `frontend/` combo demonstrates the full gamification integration pattern:
 
 1. **Backend**: A thin Express proxy that stores your API key server-side and forwards requests to the Symmio Partner API. The API key is never exposed to the browser.
-2. **Frontend**: A single-page HTML app that walks through a complete MSK Risk or MSK Health assessment, dynamically rendering each question based on its `answerFormat` and handling conditional display rules.
+2. **Frontend**: A single-page HTML app that displays milestone progress tiles, a grid of group tiles for all 17 assessment groups, and a question modal. Groups can be submitted in any order. The score progressively enriches as each group is completed.
 
 ### Quick start
 
@@ -31,7 +31,6 @@ npm install
 npm start
 
 # Terminal 2 — Start a static server for the frontend
-# (serves frontend/ so fetch() works correctly)
 npx serve frontend/
 # Then open http://localhost:3001 in your browser
 ```
@@ -40,5 +39,5 @@ See each directory's README for detailed instructions.
 
 ## Related
 
-- [Symmio Partner API Documentation](https://api.symmio.com/v1/)
-- [Developer Guide](https://api.symmio.com/v1/external/developer.html)
+- [Symmio Partner API Documentation](https://symmio-api-docs-dev.web.app/v1/)
+- [Developer Guide](https://symmio-api-docs-dev.web.app/v1/external/developer.html)

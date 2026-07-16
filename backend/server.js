@@ -38,19 +38,34 @@ async function proxy(method, path, body, language) {
     return { status: res.status, data };
 }
 
+// Create a new assessment (gamification — no type needed)
 app.post("/create-assessment", async (req, res) => {
-    const { type, userInfo, language } = req.body;
-    const endpoint = type === "health" ? "/msk-health" : "/msk-risk";
-    const result = await proxy("POST", endpoint, { userInfo }, language);
+    const { userInfo, language } = req.body;
+    const result = await proxy("POST", "/assessments", { userInfo }, language);
     res.status(result.status).json(result.data);
 });
 
+// Fetch question definitions for a specific group
+app.get("/questions", async (req, res) => {
+    const { groupId, language } = req.query;
+    const encoded = encodeURIComponent(groupId);
+    const result = await proxy("GET", `/questions?groupId=${encoded}`, undefined, language);
+    res.status(result.status).json(result.data);
+});
+
+// Submit group responses (or retest — same endpoint)
 app.post("/submit-group", async (req, res) => {
     const { assessmentId, groupId, questionResponses, language } = req.body;
-    const result = await proxy("POST", `/assessments/${assessmentId}/groups/${groupId}`, { questionResponses }, language);
+    const result = await proxy(
+        "POST",
+        `/assessments/${assessmentId}/groups/${groupId}`,
+        { questionResponses },
+        language,
+    );
     res.status(result.status).json(result.data);
 });
 
+// Get current assessment state
 app.get("/state", async (req, res) => {
     const { assessmentId, language } = req.query;
     const result = await proxy("GET", `/assessments/${assessmentId}`, undefined, language);
