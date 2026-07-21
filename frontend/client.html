@@ -345,7 +345,7 @@ function renderScore() {
     show("step-score");
 
     document.getElementById("scorePct").textContent = s.percentage != null ? `${s.percentage}%` : "\u2014";
-    document.getElementById("scoreRisk").textContent = s.riskFactor?.riskCode || "\u2014";
+    document.getElementById("scoreRisk").textContent = s.riskFactor?.riskName || "\u2014";
     document.getElementById("scoreRiskPct").textContent = s.riskFactor?.percentage != null ? `${s.riskFactor.percentage}%` : "";
     document.getElementById("scoreMove").textContent = s.movementScore?.percentage != null ? `${s.movementScore.percentage}%` : "\u2014";
     document.getElementById("scoreLife").textContent = s.lifestyleScore?.percentage != null ? `${s.lifestyleScore.percentage}%` : "\u2014";
